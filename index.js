@@ -230,7 +230,6 @@ app.get('/tuitions/my-posts', async (req, res) => {
             res.send(result);
         });
 
-        // D: Delete a tuition post (Admin/Student Route)
         app.delete('/tuitions/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
@@ -238,8 +237,6 @@ app.get('/tuitions/my-posts', async (req, res) => {
             const decodedEmail = req.decoded.email;
             const user = await usersCollection.findOne({ email: decodedEmail });
             const tuition = await tuitionsCollection.findOne(query);
-
-            // Authorization Check
             if (user?.role === 'Admin' || tuition.studentEmail === decodedEmail) {
                 const result = await tuitionsCollection.deleteOne(query);
                 res.send(result);
@@ -247,11 +244,6 @@ app.get('/tuitions/my-posts', async (req, res) => {
                 return res.status(403).send({ error: true, message: 'Forbidden: Only the owner or Admin can delete.' });
             }
         });
-        
-        
-        // ==============================================
-        // 9. Tuition Applications APIs (Phase 7, 8, 10)
-        // ==============================================
 
         // C: Apply for a tuition post (Tutor Route)
         // Backend: server/index.js
