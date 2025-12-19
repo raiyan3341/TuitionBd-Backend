@@ -24,81 +24,53 @@ const client = new MongoClient(uri, {
     }
 });
 
-// ==============================================
-// 3. JWT Verification Middleware
-// ==============================================
-// This middleware verifies the token sent from the client
 const verifyJWT = (req, res, next) => {
     const authorization = req.headers.authorization;
     if (!authorization) {
-        // console.log('Unauthorized: Missing authorization header');
         return res.status(401).send({ error: true, message: 'Unauthorized Access: Missing authorization header' });
     }
-    
-    // Authorization header format: Bearer <token>
     const token = authorization.split(' ')[1];
 
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
         if (err) {
             console.error("JWT Verification Error:", err);
-            // If the token is invalid or expired
             return res.status(401).send({ error: true, message: 'Unauthorized Access: Invalid or Expired Token' });
         }
         
-        req.decoded = decoded; // Attach decoded email to request
+        req.decoded = decoded;
         next();
     });
 };
 
-// ==============================================
-// 4. JWT API Endpoint
-// ==============================================
-// This is called by the client on login/register to get a new token
 app.post('/jwt', (req, res) => {
     const user = req.body;
     const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
     res.send({ token });
 });
 
-
-// ==============================================
-// 5. Main Run Function (DB Access)
-// ==============================================
 async function run() {
     try {
-        // Connect the client to the server 
          await client.connect(); 
         console.log("MongoDB connected successfully!");
-
         const database = client.db("TuitionFinderDB");
         const usersCollection = database.collection("users");
         const tuitionsCollection = database.collection("tuitions");
         const applicationsCollection = database.collection("applications");
         const paymentsCollection = database.collection("payments");
-        
-        
-        // ==============================================
-        // 6. Role Verification Middleware (Accesses MongoDB)
-        // ==============================================
-        // 💡 CRITICAL FIX: These functions must be defined *inside* run() to access usersCollection
-
-        // Admin verification middleware
+    
         const verifyAdmin = async (req, res, next) => {
-            const email = req.decoded.email; // Email is passed from verifyJWT
+            const email = req.decoded.email;
             const user = await usersCollection.findOne({ email: email });
             if (user?.role !== 'Admin') {
-                // console.log('Forbidden: Not an Admin');
                 return res.status(403).send({ error: true, message: 'Forbidden Access: Requires Admin role' });
             }
             next();
         };
 
-        // Tutor verification middleware
         const verifyTutor = async (req, res, next) => {
-            const email = req.decoded.email; // Email is passed from verifyJWT
+            const email = req.decoded.email;
             const user = await usersCollection.findOne({ email: email });
             if (user?.role !== 'Tutor') {
-                // console.log('Forbidden: Not a Tutor');
                 return res.status(403).send({ error: true, message: 'Forbidden Access: Requires Tutor role' });
             }
             next();
