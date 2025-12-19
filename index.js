@@ -76,17 +76,11 @@ async function run() {
             next();
         };
 
-        
-        // ==============================================
-        // 7. Users APIs (Phase 3 & Dashboard Access)
-        // ==============================================
-
-        // C: Save user on registration/social login
        app.post('/users', async (req, res) => {
     const user = req.body;
     const query = { email: user.email };
     
-    // চেক করুন ইউজার কি আগে থেকেই আছে?
+
     const existingUser = await usersCollection.findOne(query);
     if (existingUser) {
         return res.send({ message: 'User already exists', insertedId: null });
@@ -96,13 +90,12 @@ async function run() {
     res.send(result);
 });
 
-        // R: Get all users (Admin Route)
+
         app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
             const result = await usersCollection.find().toArray();
             res.send(result);
         });
 
-        // R: Get a single user's role (Used for DashboardLayout & Navbar)
         app.get('/users/:email', async (req, res) => {
             const email = req.params.email;
             const query = { email: email };
@@ -114,8 +107,6 @@ async function run() {
             }
         });
 
-        // রেভিনিউ হিস্ট্রি পাওয়ার API
-// index.js (Backend)
 
 app.get('/revenue-history', async (req, res) => {
     try {
@@ -123,10 +114,7 @@ app.get('/revenue-history', async (req, res) => {
         if (!email) {
             return res.status(400).send({ message: 'Email is required' });
         }
-
-        // 💡 আপনার ডাটাবেস অনুযায়ী কুয়েরি ঠিক করুন
-        // যদি আপনি অ্যাডমিন হন, তবে হয়তো আপনি সব ডাটা দেখতে চান
-        // আর যদি শুধু নির্দিষ্ট ইউজারের ডাটা হয় তবে: { email: email }
+        
         const query = { email: email }; 
         
         // কালেকশনের নাম আপনার ডাটাবেস অনুযায়ী চেক করুন (যেমন: paymentsCollection)
