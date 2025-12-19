@@ -3,26 +3,17 @@ const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken'); // 👈 Import JWT
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY); // Initialize Stripe
-
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const app = express();
 const port = process.env.PORT || 3000;
 
-// ==============================================
-// 1. Middleware (CORS, JSON Parsing)
-// ==============================================
 
 app.use(cors({
-    // 💡 আপনার ফ্রন্টএন্ডের পোর্ট নিশ্চিত করুন (সাধারণত 5173 বা 5174)
     origin: ['http://localhost:5173', 'http://localhost:5174'], 
     credentials: true,
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
-// ==============================================
-// 2. MongoDB Connection Setup
-// ==============================================
-
 const uri  = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.dddbozq.mongodb.net/TuitionFinder?appName=Cluster0`;
 
 const client = new MongoClient(uri, {
