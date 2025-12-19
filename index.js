@@ -145,39 +145,27 @@ app.patch('/users/update/:email', async (req, res) => {
     const result = await usersCollection.updateOne(filter, updatedDoc);
     res.send(result);
 });
-        // D: Delete a user (Optional Admin Route)
-        // app.delete('/users/:id', verifyJWT, verifyAdmin, async (req, res) => { ... });
-
-        // ==============================================
-        // 8. Tuition Posts APIs (Phase 4, 5, 6)
-        // ==============================================
-
-        // C: Post new tuition (Student Route)
         app.post('/tuitions', verifyJWT, async (req, res) => {
             const tuition = req.body;
             const tuitionPost = {
                 ...tuition,
-                status: 'Pending', // Default status for admin approval
+                status: 'Pending',
                 createdAt: new Date(),
                 updatedAt: new Date(),
             };
             const result = await tuitionsCollection.insertOne(tuitionPost);
             res.send(result);
         });
-        
-        // R: Get all tuitions (Admin Route) OR Get student's tuitions by email (Student Route)
         app.get('/tuitions', verifyJWT, async (req, res) => {
             const email = req.query.email;
             let query = {};
             
-            if (email) { // Student-specific posts
+            if (email) {
                 query = { studentEmail: email };
-            } else { // Admin view (all posts)
-                // This route should be protected for Admin only if email is not present
+            } else {
                 const decodedEmail = req.decoded.email;
                 const user = await usersCollection.findOne({ email: decodedEmail });
                 if (user?.role !== 'Admin') {
-                    // console.log('Forbidden: Not Admin viewing all tuitions');
                     return res.status(403).send({ error: true, message: 'Forbidden: Admin access required to view all tuitions.' });
                 }
             }
@@ -185,8 +173,6 @@ app.patch('/users/update/:email', async (req, res) => {
             const result = await tuitionsCollection.find(query).sort({ createdAt: -1 }).toArray();
             res.send(result);
         });
-
-        // R: Get all approved tuitions (Public/Tutor Listing - Phase 6)
         app.get('/tuitions/approved', async (req, res) => {
             const query = { status: 'Approved' };
             const result = await tuitionsCollection.find(query).sort({ createdAt: -1 }).toArray();
@@ -200,10 +186,7 @@ app.get('/tuitions/my-posts', async (req, res) => {
             return res.status(400).send({ message: "Email is required" });
         }
         
-        // সঠিক কুয়েরি এবং কালেকশন নেম (tuitionsCollection)
         const query = { studentEmail: email }; 
-        
-        // 💡 FIX: tuitionCollection -> tuitionsCollection
         const result = await tuitionsCollection.find(query).sort({ createdAt: -1 }).toArray();
         res.send(result);
     } catch (error) {
@@ -211,15 +194,11 @@ app.get('/tuitions/my-posts', async (req, res) => {
         res.status(500).send({ message: "Internal Server Error", error: error.message });
     }
 });
-
-        // R: Get latest approved tuitions for Home Page
         app.get('/latest-tuitions', async (req, res) => {
             const query = { status: 'Approved' };
             const result = await tuitionsCollection.find(query).sort({ createdAt: -1 }).limit(6).toArray();
             res.send(result);
         });
-
-        // U: Update tuition status (Admin Route)
         app.patch('/tuitions/status/:id', verifyJWT, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const newStatus = req.body.status;
@@ -231,13 +210,10 @@ app.get('/tuitions/my-posts', async (req, res) => {
             res.send(result);
         });
         
-        // U: Update tuition details (Student Route)
         app.patch('/tuitions/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const updatedData = req.body;
             const query = { _id: new ObjectId(id) };
-            
-            // Only allow update if the user is the owner (optional but recommended)
             const tuition = await tuitionsCollection.findOne(query);
             if (tuition.studentEmail !== req.decoded.email) {
                  return res.status(403).send({ error: true, message: 'Forbidden: You do not own this post.' });
@@ -247,7 +223,7 @@ app.get('/tuitions/my-posts', async (req, res) => {
                 $set: { 
                     ...updatedData, 
                     updatedAt: new Date(),
-                    status: 'Pending' // Revert to Pending after update for re-approval
+                    status: 'Pending'
                 }
             };
             const result = await tuitionsCollection.updateOne(query, updateDoc);
