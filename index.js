@@ -297,22 +297,14 @@ app.post('/applications', async (req, res) => {
             if (req.decoded.email !== studentEmail) {
                 return res.status(403).send({ error: true, message: 'Forbidden' });
             }
-            
-            // 1. Total Posts
             const totalPosts = await tuitionsCollection.countDocuments({ studentEmail: studentEmail });
-            
-            // 2. Total Applications (across all posts)
             const studentTuitionPosts = await tuitionsCollection.find({ studentEmail: studentEmail }).toArray();
             const tuitionIds = studentTuitionPosts.map(post => post._id.toString());
             const totalApplications = await applicationsCollection.countDocuments({ tuitionId: { $in: tuitionIds } });
-            
-            // 3. Hired Tutor (Status: Paid)
             const hiredCount = studentTuitionPosts.filter(post => post.status === 'Paid').length;
             
             res.send({ totalPosts, totalApplications, hiredCount });
         });
-        
-        // R: Get tutor stats (Tutor Home)
         app.get('/stats/tutor/:email', verifyJWT, verifyTutor, async (req, res) => {
             const tutorEmail = req.params.email;
             if (req.decoded.email !== tutorEmail) {
@@ -320,15 +312,12 @@ app.post('/applications', async (req, res) => {
             }
             
             const applications = await applicationsCollection.find({ tutorEmail: tutorEmail }).toArray();
-            
             const totalApplications = applications.length;
             const hiredCount = applications.filter(app => app.status === 'Paid-Confirmed').length;
             const pending = applications.filter(app => app.status === 'Applied').length;
             
             res.send({ totalApplications, hiredCount, pending });
         });
-        
-        // U: Hire Tutor/Update Application Status to 'Hired' or 'Paid' (Student Route)
         app.patch('/applications/status/:id', verifyJWT, async (req, res) => {
             const applicationId = req.params.id;
             const { newStatus } = req.body;
@@ -336,8 +325,6 @@ app.post('/applications', async (req, res) => {
             
             const application = await applicationsCollection.findOne(query);
             if (!application) return res.status(404).send({ message: 'Application not found.' });
-
-            // Ensure the user is the student owner of the tuition post (Optional but recommended)
             const tuition = await tuitionsCollection.findOne({ _id: new ObjectId(application.tuitionId) });
             if (tuition.studentEmail !== req.decoded.email) {
                  return res.status(403).send({ error: true, message: 'Forbidden: Not the student owner.' });
@@ -351,8 +338,6 @@ app.post('/applications', async (req, res) => {
             };
             
             const result = await applicationsCollection.updateOne(query, updateDoc);
-            
-            // If status is 'Paid', also update the main tuition post status to 'Paid'
             if (newStatus === 'Paid-Confirmed') {
                 await tuitionsCollection.updateOne(
                     { _id: new ObjectId(application.tuitionId) },
