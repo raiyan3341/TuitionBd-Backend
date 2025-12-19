@@ -1,4 +1,3 @@
-// index.js (Full Code with JWT and Role Middleware)
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
