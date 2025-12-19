@@ -348,23 +348,17 @@ app.post('/applications', async (req, res) => {
             res.send(result);
         });
 
-
-        // ==============================================
-        // 10. Payment and Contact Info APIs (Phase 9, 10)
-        // ==============================================
-
-        // C: Create Payment Intent (Stripe)
         app.post('/create-payment-intent', verifyJWT, async (req, res) => {
             const { price } = req.body;
-            const amount = parseInt(price * 100); // Stripe expects amount in cents/paisa
+            const amount = parseInt(price * 100);
 
-            if (amount < 1) { // Basic validation
+            if (amount < 1) {
                 return res.status(400).send({ error: 'Payment amount must be greater than 0.' });
             }
 
             const paymentIntent = await stripe.paymentIntents.create({
                 amount: amount,
-                currency: 'bdt', // Assuming you are using BDT
+                currency: 'bdt',
                 payment_method_types: ['card']
             });
 
@@ -372,22 +366,17 @@ app.post('/applications', async (req, res) => {
                 clientSecret: paymentIntent.client_secret,
             });
         });
-        
-        // R: Get Contact Info (Student for Tutor, Tutor for Student)
         app.get('/users/contact/:email', verifyJWT, async (req, res) => {
-            const targetEmail = req.params.email; // Email of the person whose contact is requested
+            const targetEmail = req.params.email;
             const requesterEmail = req.decoded.email;
             
             const requester = await usersCollection.findOne({ email: requesterEmail });
             const target = await usersCollection.findOne({ email: targetEmail }, { projection: { name: 1, email: 1, phone: 1, _id: 0 } });
             
             if (!target) return res.status(404).send({ message: 'Contact not found' });
-            
-            // Authorization Check: Must be the hired student/tutor
             let isAuthorized = false;
             
             if (requester?.role === 'Student') {
-                // Check if the student has hired the target tutor
                 const hiredPost = await tuitionsCollection.findOne({ 
                     studentEmail: requesterEmail, 
                     hiredTutorEmail: targetEmail, 
@@ -396,7 +385,6 @@ app.post('/applications', async (req, res) => {
                 if (hiredPost) isAuthorized = true;
                 
             } else if (requester?.role === 'Tutor') {
-                // Check if the tutor was hired by the target student
                  const hiredApplication = await applicationsCollection.findOne({
                     tutorEmail: requesterEmail,
                     studentEmail: targetEmail,
@@ -405,27 +393,20 @@ app.post('/applications', async (req, res) => {
                 if (hiredApplication) isAuthorized = true;
             }
             
-            if (isAuthorized || requester?.role === 'Admin') { // Admin can view any contact
+            if (isAuthorized || requester?.role === 'Admin') { 
                 res.send(target);
             } else {
-                // console.log('Forbidden: Contact info not authorized');
                 res.status(403).send({ error: true, message: 'Forbidden: Not authorized to view contact details.' });
             }
         });
-
-        // ==============================================\r\n
-        // 11. Public Tutors Listing (Phase 11)
-        // ==============================================
-        
-        // R: Get all registered Tutors (Publicly accessible)
         app.get('/tutors', async (req, res) => {
             try {
                 const query = { role: 'Tutor' };
                 
-                // Only return public profile fields
+
                 const tutors = await usersCollection.find(query)
-                                        .project({ name: 1, email: 1, subjects: 1, experience: 1, education: 1, area: 1, _id: 0 }) 
-                                        .toArray();
+                    .project({ name: 1, email: 1, subjects: 1, experience: 1, education: 1, area: 1, _id: 0 }) 
+                    .toArray();
                 
                 res.send(tutors);
             } catch (error) {
@@ -433,25 +414,15 @@ app.post('/applications', async (req, res) => {
                 res.status(500).send({ error: true, message: 'Failed to fetch tutors list' });
             }
         });
-
-
-        // Ping for deployment status
         app.get('/', (req, res) => {
             res.send('Tuition Finder Server is Running!');
         });
 
 
     } finally {
-        // Ensures that the client will close when you finish/error
-        // await client.close();
     }
 }
 run().catch(console.dir);
-
-
-// ==============================================
-// 12. Start Server
-// ==============================================
 app.listen(port, () => {
     console.log(`Tuition Finder Server listening on port ${port}`);
 });
