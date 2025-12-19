@@ -244,13 +244,9 @@ app.get('/tuitions/my-posts', async (req, res) => {
                 return res.status(403).send({ error: true, message: 'Forbidden: Only the owner or Admin can delete.' });
             }
         });
-
-        // C: Apply for a tuition post (Tutor Route)
-        // Backend: server/index.js
 app.post('/applications', async (req, res) => {
     try {
         const application = req.body;
-        // 💡 FIX: নিশ্চিত করুন applicationsCollection ভেরিয়েবলটি ব্যবহার করছেন
         const result = await applicationsCollection.insertOne(application);
         res.send(result);
     } catch (error) {
@@ -258,8 +254,6 @@ app.post('/applications', async (req, res) => {
         res.status(500).send({ message: "Internal Server Error" });
     }
 });
-
-        // R: Get applications made by a specific tutor (Tutor Home - Phase 7)
         app.get('/applications/my-applications', async (req, res) => {
     try {
         const tutorEmail = req.query.email;
@@ -273,24 +267,18 @@ app.post('/applications', async (req, res) => {
         res.status(500).send(error);
     }
 });
-        
-        // R: Get applications for a student's posts (Student Home - Phase 8)
         app.get('/applications/by-student-posts', verifyJWT, async (req, res) => {
             const studentEmail = req.query.email;
             if (req.decoded.email !== studentEmail) {
                  return res.status(403).send({ error: true, message: 'Forbidden: Cannot view other students applications.' });
             }
-            
-            // 1. Find all tuition posts by the student
+        
             const studentTuitionPosts = await tuitionsCollection.find({ studentEmail: studentEmail }).toArray();
-            const tuitionIds = studentTuitionPosts.map(post => post._id.toString()); // Convert ObjectIds to strings
-
-            // 2. Find all applications related to these posts
+            const tuitionIds = studentTuitionPosts.map(post => post._id.toString());
             const applications = await applicationsCollection.find({
                 tuitionId: { $in: tuitionIds }
             }).sort({ appliedAt: -1 }).toArray();
-            
-            // 3. Attach tuition details to each application
+        
             const populatedApplications = applications.map(app => {
                 const tuition = studentTuitionPosts.find(post => post._id.toString() === app.tuitionId);
                 return {
@@ -299,14 +287,11 @@ app.post('/applications', async (req, res) => {
                     tuitionClass: tuition?.classLevel,
                     tuitionBudget: tuition?.budget,
                     tuitionLocation: tuition?.location,
-                    // Note: tutorName and tutorEmail already in app
                 };
             });
             
             res.send(populatedApplications);
         });
-        
-        // R: Get student stats (Student Home)
         app.get('/stats/student/:email', verifyJWT, async (req, res) => {
             const studentEmail = req.params.email;
             if (req.decoded.email !== studentEmail) {
