@@ -114,10 +114,8 @@ app.get('/revenue-history', async (req, res) => {
         if (!email) {
             return res.status(400).send({ message: 'Email is required' });
         }
-        
+
         const query = { email: email }; 
-        
-        // কালেকশনের নাম আপনার ডাটাবেস অনুযায়ী চেক করুন (যেমন: paymentsCollection)
         const result = await paymentsCollection.find(query).toArray();
         
         res.send(result || []);
@@ -127,7 +125,6 @@ app.get('/revenue-history', async (req, res) => {
     }
 });
 
-        // U: Update user role (Admin Route)
         app.patch('/users/role/:id', verifyJWT, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const newRole = req.body.role;
@@ -138,13 +135,12 @@ app.get('/revenue-history', async (req, res) => {
             const result = await usersCollection.updateOne(query, updateDoc);
             res.send(result);
         });
-        // ইউজার প্রোফাইল আপডেট করার API
 app.patch('/users/update/:email', async (req, res) => {
     const email = req.params.email;
     const { name, phone, address, photo } = req.body;
     const filter = { email: email };
     const updatedDoc = {
-        $set: { name, phone, address, photo }, // এখানে photo সরাসরি টেক্সট হিসেবে স্টোর হবে
+        $set: { name, phone, address, photo },
     };
     const result = await usersCollection.updateOne(filter, updatedDoc);
     res.send(result);
