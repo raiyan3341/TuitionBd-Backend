@@ -53,16 +53,16 @@ app.post('/jwt', (req, res) => {
     res.send({ token });
 });
 
-
+let usersCollection, tuitionsCollection, applicationsCollection, paymentsCollection;
 async function run() {
     try {
          await client.connect(); 
         console.log("MongoDB connected successfully!");
         const database = client.db("TuitionFinderDB");
-        const usersCollection = database.collection("users");
-        const tuitionsCollection = database.collection("tuitions");
-        const applicationsCollection = database.collection("applications");
-        const paymentsCollection = database.collection("payments");
+usersCollection = database.collection("users");
+tuitionsCollection = database.collection("tuitions");
+applicationsCollection = database.collection("applications");
+paymentsCollection = database.collection("payments");
     
         const verifyAdmin = async (req, res, next) => {
             const email = req.decoded.email;
@@ -429,10 +429,16 @@ app.get('/', (req, res) => {
         });
 
         app.get('/tuitions/approved', async (req, res) => {
-            const query = { status: 'Approved' };
-            const result = await tuitionsCollection.find(query).sort({ createdAt: -1 }).toArray();
-            res.send(result);
-        });
+    try {
+        if (!tuitionsCollection) {
+            return res.status(500).send({ message: "Database not connected yet" });
+        }
+        const result = await tuitionsCollection.find({ status: 'Approved' }).sort({ createdAt: -1 }).toArray();
+        res.send(result);
+    } catch (error) {
+        res.status(500).send({ message: error.message });
+    }
+});
 
 if (process.env.NODE_ENV !== 'production') {
     app.listen(port, () => {
