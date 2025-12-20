@@ -424,11 +424,16 @@ app.post('/applications', async (req, res) => {
             res.send('Tuition Finder Server is Running!');
         });
 
-
     } finally {
+
     }
 }
 run().catch(console.dir);
-app.listen(port, () => {
-    console.log(`Tuition Finder Server listening on port ${port}`);
-});
+
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(port, () => {
+        console.log(`Tuition Finder Server listening on port ${port}`);
+    });
+}
+
+module.exports = app;
