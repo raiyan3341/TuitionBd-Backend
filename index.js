@@ -1,11 +1,8 @@
-if (process.env.NODE_ENV !== 'production') {
-    require('dotenv').config();
-}
-
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken'); // 👈 Import JWT
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const app = express();
 const port = process.env.PORT || 3000;
@@ -56,6 +53,9 @@ app.post('/jwt', (req, res) => {
     const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
     res.send({ token });
 });
+app.get('/', (req, res) => {
+            res.send('Tuition Finder Server is Running!');
+        });
 
 async function run() {
     try {
@@ -423,15 +423,14 @@ app.post('/applications', async (req, res) => {
                 res.status(500).send({ error: true, message: 'Failed to fetch tutors list' });
             }
         });
-        app.get('/', (req, res) => {
-            res.send('Tuition Finder Server is Running!');
-        });
+        
 
     } finally {
 
     }
 }
 run().catch(console.dir);
+
 
 if (process.env.NODE_ENV !== 'production') {
     app.listen(port, () => {
