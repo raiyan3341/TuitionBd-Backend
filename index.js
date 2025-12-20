@@ -8,10 +8,16 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 
+// আপনার ব্যাকএন্ডের index.js এ:
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://localhost:5174'], 
-    credentials: true,
+    origin: [
+        "http://localhost:5173",
+        "https://your-frontend-domain.vercel.app" // আপনার ফ্রন্টএন্ডের সম্ভাব্য ইউআরএল
+    ],
+    credentials: true
 }));
+
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 const uri  = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.dddbozq.mongodb.net/TuitionFinder?appName=Cluster0`;
