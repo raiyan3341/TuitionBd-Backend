@@ -1,8 +1,11 @@
-require('dotenv').config();
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config();
+}
+
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const jwt = require('jsonwebtoken'); // 👈 Import JWT
+const jwt = require('jsonwebtoken');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const app = express();
 const port = process.env.PORT || 3000;
@@ -12,7 +15,7 @@ const port = process.env.PORT || 3000;
 app.use(cors({
     origin: [
         "http://localhost:5173",
-        "https://your-frontend-domain.vercel.app" // আপনার ফ্রন্টএন্ডের সম্ভাব্য ইউআরএল
+        "https://tuition-bd-frontend.vercel.app" // আপনার ফ্রন্টএন্ডের সম্ভাব্য ইউআরএল
     ],
     credentials: true
 }));
