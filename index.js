@@ -52,9 +52,7 @@ app.post('/jwt', (req, res) => {
     const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
     res.send({ token });
 });
-app.get('/', (req, res) => {
-            res.send('Tuition Finder Server is Running!');
-        });
+
 
 async function run() {
     try {
@@ -181,11 +179,7 @@ app.patch('/users/update/:email', async (req, res) => {
             const result = await tuitionsCollection.find(query).sort({ createdAt: -1 }).toArray();
             res.send(result);
         });
-        app.get('/tuitions/approved', async (req, res) => {
-            const query = { status: 'Approved' };
-            const result = await tuitionsCollection.find(query).sort({ createdAt: -1 }).toArray();
-            res.send(result);
-        });
+        
         
 app.get('/tuitions/my-posts', async (req, res) => {
     try {
@@ -430,6 +424,15 @@ app.post('/applications', async (req, res) => {
 }
 run().catch(console.dir);
 
+app.get('/', (req, res) => {
+            res.send('Tuition Finder Server is Running!');
+        });
+
+        app.get('/tuitions/approved', async (req, res) => {
+            const query = { status: 'Approved' };
+            const result = await tuitionsCollection.find(query).sort({ createdAt: -1 }).toArray();
+            res.send(result);
+        });
 
 if (process.env.NODE_ENV !== 'production') {
     app.listen(port, () => {
